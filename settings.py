@@ -15,23 +15,19 @@ PURPLE = (128, 0, 128)
 ORANGE = (255, 165, 0)
 
 # Objek karakter
-PLAYER_RADIUS = 5
+PLAYER_RADIUS = 20
 PLAYER_MAX_HEALTH = 100
-ENEMY_RADIUS = 5
+ENEMY_RADIUS = 20
 ENEMY_MAX_HEALTH = 100
 
 # Pagar
-FENCE_WIDTH = 10
-FENCE_HEIGHT = 250
-fence_x = WIDTH // 2
-fence_y = HEIGHT // 2 - FENCE_HEIGHT // 2
+FENCE_WIDTH = 100
+FENCE_HEIGHT = 400
+FENCE_X = 550
+FENCE_Y = 400
 
 # Area tembak (untuk input)
 shoot_area = None  # Akan diinisialisasi di main game
-
-# Power-up box
-POWERUP_BOX_SIZE = 40
-POWERUP_SPACING = 10
 
 # Angin
 INITIAL_WIND_STRENGTH = 0.0
@@ -48,9 +44,7 @@ ENEMY_PROJECTILE_RADIUS = 5
 ENEMY_PROJECTILE_SPEED_MIN = 10
 ENEMY_PROJECTILE_SPEED_MAX = 20
 
-gravity = 0.5
-player_radius = 20  # Radius untuk deteksi tabrakan pemain
-enemy_radius = 20  # Radius untuk deteksi tabrakan musuh
+gravity = 0.5  # Radius untuk deteksi tabrakan musuh
 clock = None
 
 # Variabel global untuk angin
@@ -70,7 +64,8 @@ e_charge_start = 0
 e_charging = False
 
 
-# Power-up
+POWERUP_BOX_SIZE = 80
+POWERUP_SPACING = 10
 POWERUPS = [
     {
         "name": "Double Attack",
@@ -104,30 +99,39 @@ POWERUPS = [
     },
 ]
 
-LEVEL_CONFIGS = {
+LEVEL = {
     1: {
         "powerup_limits": {
-            0: -1,
-            1: -1,
-            2: -1,
-            3: -1,
-        },  # Level 1: All power-ups unlimited
+            0: -1,  # Power-up di index 0 (Double Attack) - Tidak terbatas
+            1: -1,  # Power-up di index 1 (Poison Attack) - Tidak terbatas
+            2: -1,  # Power-up di index 2 (Big Projectile) - Tidak terbatas
+            3: -1,  # Power-up di index 3 (Heal) - Tidak terbatas
+        },
+        "enemy_accuracy_boost": 0,  # Tidak ada peningkatan akurasi musuh
+        "enemy_power_boost": 0,  # Tidak ada peningkatan kekuatan musuh
+        "time_limit": None,  # Tidak ada batas waktu
     },
     2: {
         "powerup_limits": {
-            0: 2,
-            1: 2,
-            2: 2,
-            3: 2,
-        },  # Level 2: Each power-up can be used 2 times
+            0: 2,  # Power-up di index 0 - 2 kali penggunaan
+            1: 2,  # Power-up di index 1 - 2 kali penggunaan
+            2: 2,  # Power-up di index 2 - 2 kali penggunaan
+            3: 2,  # Power-up di index 3 - 2 kali penggunaan
+        },
+        "enemy_accuracy_boost": 0.15,  # Peningkatan akurasi musuh moderat
+        "enemy_power_boost": 5,  # +5 kerusakan untuk musuh
+        "time_limit": None,  # Tidak ada batas waktu
     },
     3: {
         "powerup_limits": {
-            0: 1,
-            1: 1,
-            2: 1,
-            3: 1,
-        },  # Level 3: Each power-up can be used 1 time
+            0: 1,  # Power-up di index 0 - 1 kali penggunaan
+            1: 1,  # Power-up di index 1 - 1 kali penggunaan
+            2: 1,  # Power-up di index 2 - 1 kali penggunaan
+            3: 1,  # Power-up di index 3 - 1 kali penggunaan
+        },
+        "enemy_accuracy_boost": 0.30,  # Peningkatan akurasi musuh signifikan
+        "enemy_power_boost": 10,  # +10 kerusakan untuk musuh
+        "time_limit": 100,  # Batas waktu 100 detik
     },
 }
 # Power-up box positions akan diatur di main, berdasarkan jumlah power-up

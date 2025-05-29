@@ -1,56 +1,76 @@
+# game.py
 import pygame
 import math
 import random
-from settings import *  # Asumsi settings.py berisi WIDTH, HEIGHT, dan warna
+from settings import *
 
-# Konfigurasi dasar
+
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Gravity Warfare")  # Judul jendela game
+pygame.display.set_caption("CAT vs DOG")
 
-# --- Pemuatan Gambar ---
-# Projectile pemain (tulang anjing)
-player_projectile_img = pygame.image.load("aset/dog/bone.png").convert_alpha()
-# Projectile musuh (Pastikan Anda memiliki file "aset/cat/fish_bone.png")
-enemy_projectile_img = pygame.image.load("aset/cat/fish_bone.png").convert_alpha()
+player_projectile_img = pygame.image.load("aset/cat/fish_bone.png").convert_alpha()
+enemy_projectile_img = pygame.image.load("aset/dog/bone.png").convert_alpha()
 
+# Background
+background_img = pygame.image.load("aset/map/beach.png")
+background_img = pygame.transform.scale(background_img, (WIDTH, HEIGHT))
 
 # Karakter
-player_img = pygame.image.load(
-    "aset/dog/idle.png"
-)  # Sekarang memuat 'cat_hit' untuk player
-enemy_img = pygame.image.load("aset/cat/idle.png")  # Sekarang memuat 'cat' untuk enemy
+player_img = pygame.image.load("aset/cat/idle.png")  # Gambar pemain (kucing)
+enemy_img = pygame.image.load("aset/dog/idle.png")  # Gambar musuh (anjing)
 
 # Elemen UI/Game
-powerup_box_img = pygame.image.load("aset/dog/hit.png")
 fence_img = pygame.image.load("aset/map/fence.png")
 
 
-# --- Resize Gambar ---
 player_img = pygame.transform.scale(player_img, (150, 150))
 enemy_img = pygame.transform.scale(enemy_img, (150, 150))
-powerup_box_img = pygame.transform.scale(powerup_box_img, (40, 40))
-# Menyesuaikan ukuran gambar projectile
+
+
 player_projectile_img = pygame.transform.scale(player_projectile_img, (50, 50))
 enemy_projectile_img = pygame.transform.scale(enemy_projectile_img, (50, 50))
 
-fence_width, fence_height = 100, 400
-fence_img = pygame.transform.scale(fence_img, (fence_width, fence_height))
+fence_img = pygame.transform.scale(fence_img, (FENCE_WIDTH, FENCE_HEIGHT))
 
 
-# --- Fungsi Gambar ---
+powerup_raw_images = {
+    "Double Attack": pygame.image.load(
+        "aset/powerups/Double_Attack.png"
+    ).convert_alpha(),
+    "Poison Attack": pygame.image.load("aset/powerups/poison.png").convert_alpha(),
+    "Big Projectile": pygame.image.load(
+        "aset/powerups/Big_Projectile.png"
+    ).convert_alpha(),
+    "Heal": pygame.image.load("aset/powerups/heal.png").convert_alpha(),
+}
+
+powerup_box_size = POWERUP_BOX_SIZE
+
+resized_powerup_images = {
+    name: pygame.transform.scale(img, (powerup_box_size, powerup_box_size))
+    for name, img in powerup_raw_images.items()
+}
+
+powerup_box_img = pygame.Surface((powerup_box_size, powerup_box_size))
+powerup_box_img.fill((200, 200, 200))  #
+
+
 def draw_player(screen, x, y):
-    """Menggambar pemain di layar."""
+    """Menggambar pemain di layar. Gambar dibalik horizontal."""
+    flipped_image = pygame.transform.flip(player_img, True, False)
     screen.blit(
-        player_img,
-        (x - player_img.get_width() // 2, y - player_img.get_height() // 2),
+        flipped_image,
+        (x - flipped_image.get_width() // 2, y - flipped_image.get_height() // 2),
     )
 
 
 def draw_enemy(screen, x, y):
-    """Menggambar musuh di layar."""
+    """Menggambar musuh di layar. Gambar dibalik horizontal."""
+    flipped_image = pygame.transform.flip(enemy_img, True, False)
     screen.blit(
-        enemy_img, (x - enemy_img.get_width() // 2, y - enemy_img.get_height() // 2)
+        flipped_image,
+        (x - flipped_image.get_width() // 2, y - flipped_image.get_height() // 2),
     )
 
 
@@ -65,18 +85,9 @@ def draw_projectile(screen, img, x, y):
     img: Objek Surface gambar projectile.
     x, y: Koordinat tengah projectile.
     """
-    # Menggambar gambar di tengah koordinat x, y
     screen.blit(
         img,
         (int(x - img.get_width() // 2), int(y - img.get_height() // 2)),
-    )
-
-
-def draw_powerup_box(screen, x, y):
-    """Menggambar kotak power-up di layar."""
-    screen.blit(
-        powerup_box_img,
-        (x - powerup_box_img.get_width() // 2, y - powerup_box_img.get_height() // 2),
     )
 
 

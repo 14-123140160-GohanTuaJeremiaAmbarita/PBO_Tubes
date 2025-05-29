@@ -1,5 +1,5 @@
 import pygame
-from settings import HEIGHT, WIDTH
+from settings import *
 
 
 class Level:
@@ -32,50 +32,34 @@ class Level:
             return default_surface
 
     def _get_powerup_limits_per_type(self):
-        """Return the power-up limits for each type per level as a dictionary."""
-        # Example: Each type of power-up will have its limit
-        if self.level_number == 1:
-            return {
-                "Double Attack": -1,  # Unlimited uses
-                "Poison Attack": 3,  # 3 uses
-                "Big Projectile": 2,  # 2 uses
-                "Heal": 1,  # 1 use
-            }
-        elif self.level_number == 2:
-            return {
-                "Double Attack": 2,  # 2 uses
-                "Poison Attack": 1,  # 1 use
-                "Big Projectile": 1,  # 1 use
-                "Heal": 1,  # 1 use
-            }
-        elif self.level_number == 3:
-            return {
-                "Double Attack": 1,  # 1 use
-                "Poison Attack": 1,  # 1 use
-                "Big Projectile": 1,  # 1 use
-                "Heal": 1,  # 1 use
-            }
-        return {}  # Default empty dictionary for other levels
+        """
+        Mengembalikan batas penggunaan power-up untuk setiap jenis per level
+        berdasarkan konfigurasi di settings.py, memetakan indeks ke nama.
+        """
+        # Dapatkan konfigurasi batas power-up untuk level saat ini dari LEVEL_CONFIGS
+        limits_from_settings_by_index = LEVEL.get(self.level_number, {}).get(
+            "powerup_limits", {}
+        )
+
+        # Buat dictionary baru dengan nama power-up sebagai kunci
+        # dan batas penggunaan sebagai nilai, berdasarkan urutan POWERUPS.
+        mapped_limits = {}
+        for index, limit in limits_from_settings_by_index.items():
+            # Pastikan indeks valid dalam daftar POWERUPS
+            if 0 <= index < len(POWERUPS):
+                powerup_name = POWERUPS[index]["name"]
+                mapped_limits[powerup_name] = limit
+        return mapped_limits
 
     def _get_enemy_accuracy_boost(self):
-        if self.level_number == 1:
-            return 0  # No boost
-        elif self.level_number == 2:
-            return 0.15  # Moderate accuracy increase
-        elif self.level_number == 3:
-            return 0.30  # Significant accuracy increase
-        return 0
+        """Mengembalikan peningkatan akurasi musuh berdasarkan konfigurasi level dari settings.py."""
+        return LEVEL.get(self.level_number, {}).get("enemy_accuracy_boost", 0)
 
     def _get_enemy_power_boost(self):
-        if self.level_number == 1:
-            return 0  # No boost
-        elif self.level_number == 2:
-            return 5  # +5 damage
-        elif self.level_number == 3:
-            return 10  # +10 damage
-        return 0
+        """Mengembalikan peningkatan kekuatan musuh berdasarkan konfigurasi level dari settings.py."""
+        return LEVEL.get(self.level_number, {}).get("enemy_power_boost", 0)
 
     def _get_time_limit(self):
-        if self.level_number == 3:
-            return 100  # 100 seconds
-        return None  # No time limit for other levels
+        """Mengembalikan batas waktu level berdasarkan konfigurasi level dari settings.py."""
+        return LEVEL.get(self.level_number, {}).get("time_limit", None)
+        mapped_limits = {}

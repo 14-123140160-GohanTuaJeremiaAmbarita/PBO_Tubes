@@ -1,18 +1,17 @@
 import pygame
-
-# Import WIDTH, HEIGHT, dan juga gambar projectile dari game.py
 from game import *
 from game_loop import game_loop  # Import game_loop
 from menu import main_menu  # Import the new main_menu function
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Gravity Warfare")
+pygame.display.set_caption("CAT vs DOG")  # Judul jendela game
 
 running_app = (
     True  # Loop ini menjaga aplikasi tetap berjalan, memungkinkan kembali ke menu
 )
 while running_app:
+
     # Panggil menu utama dan dapatkan level yang dipilih
     chosen_level = main_menu(screen)
 

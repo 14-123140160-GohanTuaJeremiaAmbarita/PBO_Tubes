@@ -1,14 +1,30 @@
 import pygame
 import math
 import random
-from settings import *  # Asumsi settings.py berisi WIDTH, HEIGHT, dan warna
-from game import *  # Mengimpor semua dari game.py
+from settings import *
+from game import *
 from level import Level
-from projectile import Projectile  # Mengimpor kelas Projectile
+from projectile import Projectile
+
+gravity = 0.5
+player_radius = PLAYER_RADIUS
+enemy_radius = ENEMY_RADIUS
+clock = None
+
+wind_strength = 0.0
+wind_direction = 0
+wind_duration = 0
+wind_round_start = 0
+round_number = 1
+
+player_projectile = None
+enemy_projectile = None
+
+e_charge_start = 0
+e_charging = False
 
 
 def generate_wind():
-    """Menghasilkan kekuatan, arah, dan durasi angin acak."""
     global wind_strength, wind_direction, wind_duration, wind_round_start
     wind_strength = random.uniform(0.1, 0.6)
     wind_direction = random.choice([-1, 1])
@@ -17,7 +33,6 @@ def generate_wind():
 
 
 def apply_wind_effect(base_speed, shooter_direction):
-    """Menyesuaikan kecepatan projectile berdasarkan efek angin."""
     if wind_direction == shooter_direction:
         return base_speed * (1 + wind_strength * 0.35)
     else:
@@ -25,27 +40,23 @@ def apply_wind_effect(base_speed, shooter_direction):
 
 
 def reset_player_projectile():
-    """Menonaktifkan projectile pemain."""
     global player_projectile
     if player_projectile:
         player_projectile.deactivate()
 
 
 def reset_enemy_projectile():
-    """Menonaktifkan projectile musuh."""
     global enemy_projectile
     if enemy_projectile:
         enemy_projectile.deactivate()
 
 
 def check_collision(px, py, ex, ey, er):
-    """Mengecek tabrakan lingkaran."""
     distance_squared = (px - ex) ** 2 + (py - ey) ** 2
     return distance_squared <= er**2
 
 
 def check_fence_collision(px, py, fx, fy, fheight):
-    """Mengecek tabrakan dengan pagar."""
     fence_width = 40
     return fx < px < fx + fence_width and fy < py < fy + fheight
 
@@ -53,66 +64,54 @@ def check_fence_collision(px, py, fx, fy, fheight):
 def game_loop(
     screen, initial_level_number, player_projectile_img, enemy_projectile_img
 ):
-    """Fungsi utama game loop."""
     global clock, round_number
     global player_projectile, enemy_projectile
     global power
-    global e_charge_start, e_charging  # <--- PERBAIKAN UTAMA: Deklarasikan sebagai global di sini
+    global e_charge_start, e_charging
 
-    # Manajemen Level
     current_level_number = initial_level_number
-    initial_powerup_limits_dict = LEVEL_CONFIGS[current_level_number]["powerup_limits"]
+    initial_powerup_limits_dict = LEVEL[current_level_number]["powerup_limits"]
     current_level = Level(current_level_number, initial_powerup_limits_dict)
 
-    # Inisialisasi power-up
     selected_powerup = None
     powerup_used_this_round = False
     powerup_uses_counts = {i: 0 for i in range(len(POWERUPS))}
 
     clock = pygame.time.Clock()
 
-    # Posisi dan status
     player_x, player_y = WIDTH // 6, 525
     enemy_x, enemy_y = WIDTH - 100, 525
-    fence_x, fence_y = WIDTH // 2, HEIGHT // 2 - 250 // 2
-    fence_height = 250
+    fence_x, fence_y = FENCE_X, FENCE_Y
+    fence_height = FENCE_HEIGHT
 
-    # Kesehatan awal
     player_health = 100
     enemy_health = 100
 
-    # Giliran dan putaran
     round_number = 1
     generate_wind()
 
-    # Inisialisasi objek projectile
     player_projectile = Projectile(-100, -100, 0, 0, player_projectile_img)
     enemy_projectile = Projectile(-100, -100, 0, 0, enemy_projectile_img)
 
-    # Variabel untuk pengisian daya pemain
     p_is_charging = False
     p_shoot_start_time = 0
     p_projectile_angle = math.pi / 4
     power = 0
 
-    # Variabel untuk pengisian daya musuh (inisialisasi ulang di sini untuk setiap game_loop call)
-    e_charge_start = 0  # Pastikan ini direset setiap kali game_loop dipanggil
+    e_charge_start = 0
     e_charging = False
     enemy_charge_duration = 1500
 
-    # Giliran
     player_turn = True
     enemy_knockback = False
     enemy_skip_turn = False
 
-    # Timer Level 3
     level_start_time = pygame.time.get_ticks()
     time_remaining = current_level.time_limit
 
-    # Kotak power-up
-    powerup_box_size = 40
+    powerup_box_size = POWERUP_BOX_SIZE
     start_x = player_x - ((powerup_box_size + 10) * len(POWERUPS) - 10) // 2
-    start_y = fence_y - 50
+    start_y = fence_y - 200
     powerup_boxes = []
     for i in range(len(POWERUPS)):
         rect = pygame.Rect(
@@ -121,7 +120,7 @@ def game_loop(
             powerup_box_size,
             powerup_box_size,
         )
-        powerup_boxes.append(rect)
+        powerup_boxes.append((rect, i))
 
     shoot_area = pygame.Rect(0, HEIGHT - 150, WIDTH, 150)
 
@@ -152,7 +151,9 @@ def game_loop(
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if player_turn:
-                    for i, rect in enumerate(powerup_boxes):
+                    for rect_item in powerup_boxes:
+                        rect = rect_item[0]
+                        i = rect_item[1]
                         if rect.collidepoint(event.pos) and not powerup_used_this_round:
                             powerup_name = POWERUPS[i]["name"]
                             current_powerup_limit = (
@@ -175,9 +176,7 @@ def game_loop(
                                     player_turn = False
                                     round_number += 1
                                     selected_powerup = None
-                                    e_charge_start = (
-                                        pygame.time.get_ticks()
-                                    )  # Set waktu mulai charge musuh
+                                    e_charge_start = pygame.time.get_ticks()
                                     e_charging = True
                                 break
 
@@ -189,8 +188,8 @@ def game_loop(
             elif event.type == pygame.MOUSEBUTTONUP:
                 if player_turn and p_is_charging:
                     hold_time = pygame.time.get_ticks() - p_shoot_start_time
-                    power = min(100, hold_time // 10)
-                    base_speed = min(10 + hold_time / 100, 20)
+                    power = min(150, hold_time // 10)
+                    base_speed = min(20 + hold_time / 100, 20)
                     p_projectile_speed = apply_wind_effect(base_speed, 1)
 
                     proj_image_for_player = player_projectile_img
@@ -227,7 +226,8 @@ def game_loop(
             hold_time = pygame.time.get_ticks() - p_shoot_start_time
             power = min(100, hold_time // 10)
 
-        draw_fence(screen, fence_x, fence_y, fence_height)
+        if current_level_number > 1:
+            draw_fence(screen, fence_x, fence_y, fence_height)
         draw_player(screen, player_x, player_y)
         draw_enemy(screen, enemy_x, enemy_y)
 
@@ -238,13 +238,12 @@ def game_loop(
             if check_fence_collision(
                 player_projectile.x, player_projectile.y, fence_x, fence_y, fence_height
             ):
-                print("Projectile pemain menabrak pagar.")  # Debugging
                 reset_player_projectile()
                 player_turn = False
                 round_number += 1
                 selected_powerup = None
                 powerup_used_this_round = False
-                e_charge_start = pygame.time.get_ticks()  # Set waktu mulai charge musuh
+                e_charge_start = pygame.time.get_ticks()
                 e_charging = True
             elif check_collision(
                 player_projectile.x,
@@ -253,7 +252,6 @@ def game_loop(
                 enemy_y,
                 enemy_radius + player_projectile.radius,
             ):
-                print("Projectile pemain menabrak musuh!")  # Debugging
                 damage = 10
                 if (
                     selected_powerup is not None
@@ -276,47 +274,36 @@ def game_loop(
                 powerup_used_this_round = False
 
                 if not enemy_skip_turn:
-                    e_charge_start = (
-                        pygame.time.get_ticks()
-                    )  # Set waktu mulai charge musuh
+                    e_charge_start = pygame.time.get_ticks()
                     e_charging = True
-                    print("Musuh mulai mengisi daya.")  # Debugging
                 else:
                     enemy_skip_turn = False
                     player_turn = True
                     round_number += 1
                     generate_wind()
-                    print("Musuh melewatkan giliran, giliran pemain lagi.")  # Debugging
             elif (
                 player_projectile.x < 0
                 or player_projectile.x > WIDTH
                 or player_projectile.y > HEIGHT
             ):
-                print("Projectile pemain keluar layar.")  # Debugging
                 reset_player_projectile()
                 player_turn = False
                 round_number += 1
                 selected_powerup = None
                 powerup_used_this_round = False
-                e_charge_start = pygame.time.get_ticks()  # Set waktu mulai charge musuh
+                e_charge_start = pygame.time.get_ticks()
                 e_charging = True
 
         if not player_turn:
-            print(f"DEBUG: Bukan giliran pemain. player_turn: {player_turn}")
             now = pygame.time.get_ticks()
             if enemy_knockback:
-                print("DEBUG: Musuh terkena knockback, giliran pemain lagi.")
                 enemy_knockback = False
                 player_turn = True
                 round_number += 1
                 powerup_used_this_round = False
                 generate_wind()
             elif e_charging:
-                print(
-                    f"DEBUG: Musuh sedang mengisi daya. Waktu saat ini: {now}, Waktu mulai charge: {e_charge_start}"
-                )
                 if now - e_charge_start >= enemy_charge_duration:
-                    print("DEBUG: Waktu pengisian musuh selesai, musuh menembak!")
                     base_speed = random.uniform(10, 20)
 
                     angle = 3 * math.pi / 4
@@ -336,10 +323,6 @@ def game_loop(
                     enemy_projectile.active = True
 
                     e_charging = False
-                else:
-                    print(
-                        f"DEBUG: Musuh masih mengisi daya. Sisa waktu: {enemy_charge_duration - (now - e_charge_start)}"
-                    )
             if enemy_projectile.active:
                 enemy_projectile.update()
                 enemy_projectile.draw(screen)
@@ -351,7 +334,6 @@ def game_loop(
                     fence_y,
                     fence_height,
                 ):
-                    print("DEBUG: Projectile musuh menabrak pagar.")
                     reset_enemy_projectile()
                     player_turn = True
                     round_number += 1
@@ -364,7 +346,6 @@ def game_loop(
                     player_y,
                     player_radius + enemy_projectile.radius,
                 ):
-                    print("DEBUG: Projectile musuh menabrak pemain!")
                     damage_taken = 10 + current_level.enemy_power_boost
                     player_health -= damage_taken
                     reset_enemy_projectile()
@@ -377,7 +358,6 @@ def game_loop(
                     or enemy_projectile.x > WIDTH
                     or enemy_projectile.y > HEIGHT
                 ):
-                    print("DEBUG: Projectile musuh keluar layar.")
                     reset_enemy_projectile()
                     player_turn = True
                     round_number += 1
@@ -394,7 +374,9 @@ def game_loop(
         if current_level.time_limit is not None:
             draw_text(screen, f"TIME: {int(time_remaining)}", WIDTH - 80, 20, 30, RED)
 
-        for i, rect in enumerate(powerup_boxes):
+        for rect_item in powerup_boxes:  # Iterasi sebagai tuple (rect, i)
+            rect = rect_item[0]
+            i = rect_item[1]
             powerup_name = POWERUPS[i]["name"]
             current_powerup_limit = current_level.powerup_limits_per_type.get(
                 powerup_name, -1
@@ -407,17 +389,15 @@ def game_loop(
             )
 
             if is_available:
+                # Gambar latar belakang kotak power-up
                 screen.blit(powerup_box_img, (rect.x, rect.y))
-                if (
-                    selected_powerup == i
-                    and player_turn
-                    and not powerup_used_this_round
-                ):
-                    pygame.draw.rect(screen, BLACK, rect, 4)
-                elif selected_powerup == i:
-                    pygame.draw.rect(screen, BLACK, rect, 4)
-                else:
-                    pygame.draw.rect(screen, BLACK, rect, 2)
+                # Gambar ikon power-up
+                if powerup_name in resized_powerup_images:
+                    img = resized_powerup_images[powerup_name]
+                    screen.blit(img, rect)  # Menggambar ikon mengisi seluruh kotak
+                pygame.draw.rect(screen, BLACK, rect, 2)  # Bingkai kotak power-up
+
+                # Teks nama power-up (hanya kata pertama)
                 draw_text(
                     screen,
                     POWERUPS[i]["name"].split()[0],
@@ -425,6 +405,7 @@ def game_loop(
                     rect.centery - 5,
                     20,
                 )
+                # Teks jumlah penggunaan tersisa
                 if current_powerup_limit != -1:
                     draw_text(
                         screen,
@@ -435,22 +416,35 @@ def game_loop(
                         BLACK,
                     )
 
+                # Tampilkan deskripsi saat dihover
                 if rect.collidepoint(pygame.mouse.get_pos()):
                     desc_text = POWERUPS[i]["desc"]
                     draw_text(screen, desc_text, rect.centerx, rect.y - 20, 15, BLACK)
             else:
-                dimmed_img = powerup_box_img.copy()
-                dimmed_img.set_alpha(80)
-                screen.blit(dimmed_img, (rect.x, rect.y))
-                pygame.draw.rect(screen, (100, 100, 100), rect, 2)
+                # Jika power-up tidak tersedia, gambar latar belakang redup
+                dimmed_box_img = powerup_box_img.copy()
+                dimmed_box_img.set_alpha(80)  # Buat semi-transparan
+                screen.blit(dimmed_box_img, (rect.x, rect.y))
+
+                # Gambar ikon power-up yang redup
+                if powerup_name in resized_powerup_images:
+                    dimmed_icon_img = resized_powerup_images[powerup_name].copy()
+                    dimmed_icon_img.set_alpha(80)
+                    screen.blit(
+                        dimmed_icon_img, rect
+                    )  # Menggambar ikon mengisi seluruh kotak
+                pygame.draw.rect(screen, (100, 100, 100), rect, 2)  # Bingkai abu-abu
+
+                # Teks nama power-up (redup)
                 draw_text(
                     screen,
                     POWERUPS[i]["name"].split()[0],
                     rect.centerx,
                     rect.centery - 5,
                     20,
-                    (150, 150, 150),
+                    (150, 150, 150),  # Teks abu-abu
                 )
+                # Teks jumlah penggunaan (0)
                 draw_text(
                     screen, "(0)", rect.centerx, rect.centery + 15, 15, (150, 150, 150)
                 )
@@ -506,7 +500,7 @@ def game_loop(
 
             current_level_number += 1
             if current_level_number <= 3:
-                next_level_powerup_limits_dict = LEVEL_CONFIGS[current_level_number][
+                next_level_powerup_limits_dict = LEVEL[current_level_number][
                     "powerup_limits"
                 ]
                 current_level = Level(

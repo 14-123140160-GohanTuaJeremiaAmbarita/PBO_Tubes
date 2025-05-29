@@ -1,12 +1,5 @@
 import pygame
-from game import (
-    WIDTH,
-    HEIGHT,
-    BLACK,
-    WHITE,
-    GREEN,
-    draw_text,
-)  # Import necessary constants and functions
+from game import *
 
 
 def main_menu(screen):
@@ -61,7 +54,7 @@ def main_menu(screen):
         for i, rect in enumerate(level_buttons_rects):
             level_num = i + 1
             color = (
-                GREEN if selected_level == level_num else BLACK
+                RED if selected_level == level_num else BLACK
             )  # Green if selected, Black otherwise
             pygame.draw.rect(
                 screen, color, rect, 2, border_radius=10
