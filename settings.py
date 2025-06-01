@@ -1,10 +1,7 @@
-# config/settings.py
-
-# Ukuran layar
 WIDTH = 1200
 HEIGHT = 800
+GRAVITY = 0.5
 
-# Warna (RGB)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
@@ -14,54 +11,53 @@ BLACK = (0, 0, 0)
 PURPLE = (128, 0, 128)
 ORANGE = (255, 165, 0)
 
-# Objek karakter
+PLAYER_CHAR_SIZE = (100, 100)
 PLAYER_RADIUS = 20
 PLAYER_MAX_HEALTH = 100
 ENEMY_RADIUS = 20
 ENEMY_MAX_HEALTH = 100
+BASE_DAMAGE = 25
 
-# Pagar
-FENCE_WIDTH = 100
+MIN_PLAYER_BASE_SPEED = 8
+MAX_PLAYER_CHARGE_TIME = 2000
+MIN_ENEMY_BASE_SPEED = 8
+MAX_PROJECTILE_SPEED = 30
+FENCE_WIDTH = 150
 FENCE_HEIGHT = 400
 FENCE_X = 550
 FENCE_Y = 400
 
-# Area tembak (untuk input)
-shoot_area = None  # Akan diinisialisasi di main game
+shoot_area = None
 
-# Angin
 INITIAL_WIND_STRENGTH = 0.0
-INITIAL_WIND_DIRECTION = 1  # 1 = kanan, -1 = kiri
-INITIAL_WIND_DURATION = 1  # dalam ronde
+INITIAL_WIND_DIRECTION = 1
+INITIAL_WIND_DURATION = 1
+INITIAL_WIND_ROUND_START = 0
 
-# Projectile pemain
-PLAYER_PROJECTILE_RADIUS = 5
+PLAYER_PROJECTILE_RADIUS = 20
 PLAYER_PROJECTILE_SPEED_BASE = 10
 PLAYER_PROJECTILE_MAX_SPEED = 20
 
-# Projectile musuh
-ENEMY_PROJECTILE_RADIUS = 5
+ENEMY_PROJECTILE_RADIUS = 20
 ENEMY_PROJECTILE_SPEED_MIN = 10
 ENEMY_PROJECTILE_SPEED_MAX = 20
 
-gravity = 0.5  # Radius untuk deteksi tabrakan musuh
 clock = None
 
-# Variabel global untuk angin
 wind_strength = 0.0
 wind_direction = 0
 wind_duration = 0
 wind_round_start = 0
 round_number = 1
 
-# Objek projectile global (akan diinisialisasi di game_loop)
 player_projectile = None
 enemy_projectile = None
 
-# Variabel global untuk pengisian daya musuh
-# Penting: Inisialisasi di sini agar ada di scope global
 e_charge_start = 0
 e_charging = False
+
+HIT_DURATION = 1000
+MISS_DURATION = 1000
 
 
 POWERUP_BOX_SIZE = 80
@@ -102,43 +98,62 @@ POWERUPS = [
 LEVEL = {
     1: {
         "powerup_limits": {
-            0: -1,  # Power-up di index 0 (Double Attack) - Tidak terbatas
-            1: -1,  # Power-up di index 1 (Poison Attack) - Tidak terbatas
-            2: -1,  # Power-up di index 2 (Big Projectile) - Tidak terbatas
-            3: -1,  # Power-up di index 3 (Heal) - Tidak terbatas
+            0: -1,
+            1: -1,
+            2: -1,
+            3: -1,
         },
-        "enemy_accuracy_boost": 0,  # Tidak ada peningkatan akurasi musuh
-        "enemy_power_boost": 0,  # Tidak ada peningkatan kekuatan musuh
-        "time_limit": None,  # Tidak ada batas waktu
+        "enemy_accuracy_boost": 0,
+        "enemy_power_boost": 5,  # DIUBAH: Meningkatkan bonus kekuatan musuh
+        "time_limit": None,
+        "player_x": WIDTH // 6,
+        "player_y": 525,
+        "enemy_x": WIDTH - 100,
+        "enemy_y": 525,
+        "fence_height": FENCE_HEIGHT // 2 - 50,
+        "fence_width": FENCE_WIDTH,
+        "fence_x": FENCE_X,
+        "fence_y": FENCE_Y,
     },
     2: {
         "powerup_limits": {
-            0: 2,  # Power-up di index 0 - 2 kali penggunaan
-            1: 2,  # Power-up di index 1 - 2 kali penggunaan
-            2: 2,  # Power-up di index 2 - 2 kali penggunaan
-            3: 2,  # Power-up di index 3 - 2 kali penggunaan
+            0: 2,
+            1: 2,
+            2: 2,
+            3: 2,
         },
-        "enemy_accuracy_boost": 0.15,  # Peningkatan akurasi musuh moderat
-        "enemy_power_boost": 5,  # +5 kerusakan untuk musuh
-        "time_limit": None,  # Tidak ada batas waktu
+        "enemy_accuracy_boost": 0.15,
+        "enemy_power_boost": 10,  # DIUBAH: Meningkatkan bonus kekuatan musuh
+        "time_limit": None,
+        "player_x": 150,
+        "player_y": 525,
+        "enemy_x": WIDTH - 100,
+        "enemy_y": 575,
+        "fence_height": FENCE_HEIGHT,
+        "fence_width": FENCE_WIDTH,
+        "fence_x": FENCE_X,
+        "fence_y": FENCE_Y,
     },
     3: {
         "powerup_limits": {
-            0: 1,  # Power-up di index 0 - 1 kali penggunaan
-            1: 1,  # Power-up di index 1 - 1 kali penggunaan
-            2: 1,  # Power-up di index 2 - 1 kali penggunaan
-            3: 1,  # Power-up di index 3 - 1 kali penggunaan
+            0: 1,
+            1: 1,
+            2: 1,
+            3: 1,
         },
-        "enemy_accuracy_boost": 0.30,  # Peningkatan akurasi musuh signifikan
-        "enemy_power_boost": 10,  # +10 kerusakan untuk musuh
-        "time_limit": 100,  # Batas waktu 100 detik
+        "enemy_accuracy_boost": 0.30,
+        "enemy_power_boost": 15,  # DIUBAH: Meningkatkan bonus kekuatan musuh
+        "time_limit": 100,
+        "player_x": 150,
+        "player_y": 575,
+        "enemy_x": 1000,
+        "enemy_y": 575,
+        "fence_height": FENCE_HEIGHT,
+        "fence_width": FENCE_WIDTH,
+        "fence_x": FENCE_X - 50,
+        "fence_y": FENCE_Y,
     },
 }
-# Power-up box positions akan diatur di main, berdasarkan jumlah power-up
-
-# Lain-lain
 FONT_SIZE_TEXT = 30
 FONT_SIZE_TITLE = 40
 FONT_SIZE_GAME_OVER = 50
-
-# Ketersediaan fitur lain bisa ditambahkan di sini
