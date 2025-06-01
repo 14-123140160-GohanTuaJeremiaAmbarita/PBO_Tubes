@@ -38,12 +38,13 @@ def main_menu(screen):
     )
 
     while running:
-        screen.fill(WHITE)
+        screen.blit(menu_background_img, (0, 0))
+
         draw_text(screen, "CAT VS DOG", WIDTH // 2, HEIGHT // 4, 74, BLACK)
 
         for i, rect in enumerate(level_buttons_rects):
             level_num = i + 1
-            color = RED if selected_level == level_num else BLACK
+            color = GREEN if selected_level == level_num else BLACK
             pygame.draw.rect(screen, color, rect, 2, border_radius=10)
             draw_text(screen, level_names[i], rect.centerx, rect.centery, 40, color)
 

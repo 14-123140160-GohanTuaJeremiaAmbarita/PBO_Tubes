@@ -28,9 +28,9 @@ class Level:
     def _load_background(self):
         try:
             if self.level_number == 1:
-                img = pygame.image.load("aset/map/mountain.png")
-            elif self.level_number == 2:
                 img = pygame.image.load("aset/map/beach.png")
+            elif self.level_number == 2:
+                img = pygame.image.load("aset/map/mountain.png")
             elif self.level_number == 3:
                 img = pygame.image.load("aset/map/house.png")
             else:

@@ -119,9 +119,7 @@ class GameLoop:
         print("DEBUG: GameLoop __init__ finished.")
 
     def _create_powerup_boxes(self):
-        start_x = (
-            self.player.x - ((self.powerup_box_size + 10) * len(POWERUPS) - 10) // 2
-        )
+        start_x = 50
         start_y = self.fence_y - 200
         powerup_boxes = []
         for i in range(len(POWERUPS)):
@@ -414,7 +412,6 @@ class GameLoop:
                 )
 
                 enemy_projectile_resolved_this_frame = False
-                # Check collision with fence
                 if check_fence_collision(
                     self.enemy_projectile.x,
                     self.enemy_projectile.y,
@@ -497,7 +494,7 @@ class GameLoop:
         self.screen.fill(WHITE)
         self.screen.blit(self.current_level.background_img, (0, 0))
 
-        if self.current_level_number > 1:
+        if self.current_level_number > 2:
             self.screen.blit(fence_img, (self.fence_x, self.fence_y))
 
         self.player.draw(self.screen)
@@ -533,6 +530,12 @@ class GameLoop:
             )
 
         draw_wind_bar(self.screen, WIDTH // 2, 50, wind_strength, wind_direction)
+        print(
+            f"DEBUG: Kekuatan: {wind_strength:.2f}, Arah: {'Kanan' if wind_direction == 1 else 'Kiri'}, Durasi: {wind_duration} putaran."
+        )
+        print(
+            f"DEBUG Wind draw: Durasi Angin: {wind_duration}, Arah Angin: {wind_direction}"
+        )
         draw_text(self.screen, "WIND", WIDTH // 2, 30, 25)
 
         if self.p_is_charging:

@@ -186,6 +186,10 @@ resized_powerup_images = powerup_raw_images
 powerup_box_img = pygame.Surface((POWERUP_BOX_SIZE, POWERUP_BOX_SIZE))
 powerup_box_img.fill((200, 200, 200))
 
+menu_background_img = load_and_scale_image(
+    "aset/map/menu.png", (WIDTH, HEIGHT), alpha=False
+)
+
 
 def draw_power_bar(screen, x, y, power):
     max_width = 100

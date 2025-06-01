@@ -15,8 +15,8 @@ wind_strength = INITIAL_WIND_STRENGTH
 wind_direction = INITIAL_WIND_DIRECTION
 wind_duration = INITIAL_WIND_DURATION
 wind_round_start = INITIAL_WIND_ROUND_START
-wind_direction = random.choice([1, 2])
 wind_direction = random.choice([-1, 1])
+wind_duration = random.choice([1, 2])
 
 
 def generate_wind(current_round_number):
@@ -25,6 +25,10 @@ def generate_wind(current_round_number):
     wind_direction = random.choice([-1, 1])
     wind_duration = random.choice([1, 2])
     wind_round_start = current_round_number
+    print(
+        f"DEBUG: Angin baru dihasilkan! Putaran: {current_round_number}, Kekuatan: {wind_strength:.2f}, Arah: {'Kanan' if wind_direction == 1 else 'Kiri'}, Durasi: {wind_duration} putaran."
+    )
+    print(f"DEBUG Wind: Durasi Angin: {wind_duration}, Arah Angin: {wind_direction}")
 
 
 def apply_wind_effect(base_speed, shooter_direction):
