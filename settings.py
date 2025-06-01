@@ -11,17 +11,17 @@ BLACK = (0, 0, 0)
 PURPLE = (128, 0, 128)
 ORANGE = (255, 165, 0)
 
-PLAYER_CHAR_SIZE = (100, 100)
-PLAYER_RADIUS = 20
+PLAYER_CHAR_SIZE = (150, 150)
+PLAYER_RADIUS = 30
 PLAYER_MAX_HEALTH = 100
-ENEMY_RADIUS = 20
+ENEMY_RADIUS = 30
 ENEMY_MAX_HEALTH = 100
 BASE_DAMAGE = 25
 
-MIN_PLAYER_BASE_SPEED = 8
+MIN_PLAYER_BASE_SPEED = 10
 MAX_PLAYER_CHARGE_TIME = 2000
-MIN_ENEMY_BASE_SPEED = 8
-MAX_PROJECTILE_SPEED = 30
+MIN_ENEMY_BASE_SPEED = 10
+MAX_PROJECTILE_SPEED = 25
 FENCE_WIDTH = 150
 FENCE_HEIGHT = 400
 FENCE_X = 550
@@ -34,13 +34,13 @@ INITIAL_WIND_DIRECTION = 1
 INITIAL_WIND_DURATION = 1
 INITIAL_WIND_ROUND_START = 0
 
-PLAYER_PROJECTILE_RADIUS = 20
-PLAYER_PROJECTILE_SPEED_BASE = 10
-PLAYER_PROJECTILE_MAX_SPEED = 20
+PLAYER_PROJECTILE_RADIUS = 30
+PLAYER_PROJECTILE_SPEED_BASE = 20
+PLAYER_PROJECTILE_MAX_SPEED = 40
 
-ENEMY_PROJECTILE_RADIUS = 20
+ENEMY_PROJECTILE_RADIUS = 30
 ENEMY_PROJECTILE_SPEED_MIN = 10
-ENEMY_PROJECTILE_SPEED_MAX = 20
+ENEMY_PROJECTILE_SPEED_MAX = 25
 
 clock = None
 
@@ -66,28 +66,28 @@ POWERUPS = [
     {
         "name": "Double Attack",
         "desc": "Attack damage x2 this round",
-        "color": (255, 165, 0),  # ORANGE
+        "color": (255, 165, 0),
         "effect": lambda damage: damage * 2,
         "type": "damage",
     },
     {
         "name": "Poison Attack",
         "desc": "Enemy skip next turn if hit and cause knockback",
-        "color": (128, 0, 128),  # PURPLE
+        "color": (128, 0, 128),
         "effect": None,
         "type": "poison",
     },
     {
         "name": "Big Projectile",
         "desc": "Bigger projectile and hit area",
-        "color": (255, 255, 0),  # YELLOW
+        "color": (255, 255, 0),
         "effect": None,
         "type": "size",
     },
     {
         "name": "Heal",
         "desc": "Heal 30 HP but skip attack",
-        "color": (0, 255, 0),  # GREEN
+        "color": (0, 255, 0),
         "effect": lambda player: setattr(
             player, "health", min(player.health + 30, 100)
         ),
@@ -104,7 +104,7 @@ LEVEL = {
             3: -1,
         },
         "enemy_accuracy_boost": 0,
-        "enemy_power_boost": 5,  # DIUBAH: Meningkatkan bonus kekuatan musuh
+        "enemy_power_boost": 5,
         "time_limit": None,
         "player_x": WIDTH // 6,
         "player_y": 525,
@@ -123,11 +123,11 @@ LEVEL = {
             3: 2,
         },
         "enemy_accuracy_boost": 0.15,
-        "enemy_power_boost": 10,  # DIUBAH: Meningkatkan bonus kekuatan musuh
+        "enemy_power_boost": 10,
         "time_limit": None,
         "player_x": 150,
-        "player_y": 525,
-        "enemy_x": WIDTH - 100,
+        "player_y": 575,
+        "enemy_x": 1000,
         "enemy_y": 575,
         "fence_height": FENCE_HEIGHT,
         "fence_width": FENCE_WIDTH,
@@ -142,7 +142,7 @@ LEVEL = {
             3: 1,
         },
         "enemy_accuracy_boost": 0.30,
-        "enemy_power_boost": 15,  # DIUBAH: Meningkatkan bonus kekuatan musuh
+        "enemy_power_boost": 15,
         "time_limit": 100,
         "player_x": 150,
         "player_y": 575,

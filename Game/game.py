@@ -2,7 +2,7 @@ import pygame
 import math
 import random
 from settings import *
-from abc import ABC, abstractmethod  # Untuk Abstraksi
+from abc import ABC, abstractmethod
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -19,7 +19,6 @@ except pygame.error as e:
     print(f"ERROR: Gagal memuat audio: {e}")
 
 
-# Fungsi pembantu untuk memuat gambar dengan penanganan error
 def load_and_scale_image(path, size, alpha=True):
     try:
         img = pygame.image.load(path)
@@ -33,7 +32,6 @@ def load_and_scale_image(path, size, alpha=True):
         return pygame.Surface(size, pygame.SRCALPHA if alpha else 0)
 
 
-# --- Kelas Abstrak Character (Abstraksi & Pewarisan) ---
 class Character(ABC, pygame.sprite.Sprite):
     def __init__(
         self,
@@ -47,15 +45,14 @@ class Character(ABC, pygame.sprite.Sprite):
         flipped_horizontally=False,
     ):
         super().__init__()
-        self._max_health = max_health  # Enkapsulasi
-        self._current_health = max_health  # Enkapsulasi
-        self._x = x  # Enkapsulasi
-        self._y = y  # Enkapsulasi
-        self._state = "idle"  # Enkapsulasi
-        self._state_timer = 0  # Enkapsulasi
-        self._flipped_horizontally = flipped_horizontally  # Enkapsulasi
+        self._max_health = max_health
+        self._current_health = max_health
+        self._x = x
+        self._y = y
+        self._state = "idle"
+        self._state_timer = 0
+        self._flipped_horizontally = flipped_horizontally
 
-        # Pemuatan dan scaling gambar untuk semua state
         self._idle_image = load_and_scale_image(idle_image_path, size)
         self._hit_image = load_and_scale_image(hit_image_path, size)
         self._edge_image = load_and_scale_image(edge_image_path, size)
@@ -90,29 +87,28 @@ class Character(ABC, pygame.sprite.Sprite):
         self._y = value
         self.rect.centery = int(self._y)
 
-    # Properti untuk enkapsulasi state
     @property
     def state(self):
         return self._state
 
     @state.setter
     def state(self, new_state):
-        if self._state != new_state:  # Hanya update jika state berubah
+        if self._state != new_state:
             self._state = new_state
             self._state_timer = pygame.time.get_ticks()
 
     @abstractmethod
-    def draw(self, screen):  # Metode abstrak (Polimorfisme)
+    def draw(self, screen):
         pass
 
     def update_image_by_state(self, current_time, hit_duration, miss_duration):
         """Memperbarui gambar karakter berdasarkan state dan timer."""
         if self._state == "hit" and current_time - self._state_timer >= hit_duration:
-            self.state = "idle"  # Menggunakan setter untuk reset state
+            self.state = "idle"
         elif (
             self._state == "edge" and current_time - self._state_timer >= miss_duration
         ):
-            self.state = "idle"  # Menggunakan setter untuk reset state
+            self.state = "idle"
 
         if self._state == "hit":
             self.image = self._hit_image
@@ -121,7 +117,6 @@ class Character(ABC, pygame.sprite.Sprite):
         else:
             self.image = self._idle_image
 
-        # Terapkan flip secara konsisten di sini
         self.image = pygame.transform.flip(
             self.image, self._flipped_horizontally, False
         )
@@ -165,7 +160,6 @@ class Enemy(Character):
         screen.blit(self.image, self.rect)
 
 
-# --- Pemuatan Gambar Global (yang tidak terkait langsung dengan Character) ---
 player_projectile_img = load_and_scale_image("aset/cat/fish_bone.png", (50, 50))
 enemy_projectile_img = load_and_scale_image("aset/dog/bone.png", (50, 50))
 background_img = load_and_scale_image(
@@ -187,13 +181,12 @@ powerup_raw_images = {
         "aset/powerups/heal.png", (POWERUP_BOX_SIZE, POWERUP_BOX_SIZE)
     ),
 }
-resized_powerup_images = powerup_raw_images  # Sudah di-scale oleh load_and_scale_image
+resized_powerup_images = powerup_raw_images
 
 powerup_box_img = pygame.Surface((POWERUP_BOX_SIZE, POWERUP_BOX_SIZE))
 powerup_box_img.fill((200, 200, 200))
 
 
-# --- Fungsi Gambar Umum (tidak terkait langsung dengan instance Character) ---
 def draw_power_bar(screen, x, y, power):
     max_width = 100
     width = max(0, min(int(power), max_width))
