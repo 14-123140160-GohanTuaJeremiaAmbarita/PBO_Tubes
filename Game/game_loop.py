@@ -104,7 +104,6 @@ class GameLoop:
         self.enemy_charge_duration = 1500
         print("DEBUG: Enemy projectile charging state initialized.")
 
-        # MODIFIED: Inisialisasi self.time_remaining berdasarkan current_level.time_limit
         self.level_start_time = pygame.time.get_ticks()
         self.time_remaining = self.current_level.time_limit
         print(
@@ -194,12 +193,7 @@ class GameLoop:
                 if self.player_turn and self.p_is_charging:
                     hold_time = pygame.time.get_ticks() - self.p_shoot_start_time
                     self.power = min(150, hold_time // 10)
-                    charge_percentage = min(1.0, hold_time / MAX_PLAYER_CHARGE_TIME)
-                    base_speed = (
-                        MIN_PLAYER_BASE_SPEED
-                        + (MAX_PROJECTILE_SPEED - MIN_PLAYER_BASE_SPEED)
-                        * charge_percentage
-                    )
+                    base_speed = min(20 + hold_time / 100, 20)
                     speed = self.wind.apply_effect(base_speed, 1)
 
                     proj_image_for_player = player_projectile_img

@@ -68,7 +68,6 @@ class Character(ABC, pygame.sprite.Sprite):
     def health(self, value):
         self._current_health = max(0, min(value, self._max_health))
 
-    # Properti untuk enkapsulasi posisi
     @property
     def x(self):
         return self._x
@@ -102,7 +101,6 @@ class Character(ABC, pygame.sprite.Sprite):
         pass
 
     def update_image_by_state(self, current_time, hit_duration, miss_duration):
-        """Memperbarui gambar karakter berdasarkan state dan timer."""
         if self._state == "hit" and current_time - self._state_timer >= hit_duration:
             self.state = "idle"
         elif (
