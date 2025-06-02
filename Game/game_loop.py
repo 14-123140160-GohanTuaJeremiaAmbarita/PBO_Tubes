@@ -19,15 +19,7 @@ from Game.game import (
 )
 from Game.level import Level
 from Game.projectile import Projectile
-from Game.wind import (
-    generate_wind,
-    apply_wind_effect,
-    wind_strength,
-    wind_direction,
-    wind_duration,
-    wind_round_start,
-    draw_wind_bar,
-)
+from Game.wind import wind
 from Game.collision_handler import check_collision, check_fence_collision
 
 
@@ -46,7 +38,10 @@ class GameLoop:
 
         self.current_level_number = initial_level_number
         print(f"DEBUG: Initializing Level {self.current_level_number}.")
-        self.current_level = Level(self.current_level_number)
+        initial_powerup_limits_dict = LEVEL[self.current_level_number]["powerup_limits"]
+        self.current_level = Level(
+            self.current_level_number, initial_powerup_limits_dict
+        )
         print(
             f"DEBUG: Level {self.current_level_number} created with background {self.current_level.background_img.get_size()}."
         )
@@ -54,10 +49,10 @@ class GameLoop:
         self.player = Player(self.current_level.player_x, self.current_level.player_y)
         self.enemy = Enemy(self.current_level.enemy_x, self.current_level.enemy_y)
         print(
-            f"DEBUG: Player initialized at ({self.player.x}, {self.player.y}) with HP {self.player.health}."
+            f"DEBUG: Player initialized at ({self.player.x:.2f}, {self.player.y:.2f}) with HP {self.player.health}."
         )
         print(
-            f"DEBUG: Enemy initialized at ({self.enemy.x}, {self.enemy.y}) with HP {self.enemy.health}."
+            f"DEBUG: Enemy initialized at ({self.enemy.x:.2f}, {self.enemy.y:.2f}) with HP {self.enemy.health}."
         )
 
         self.fence_x = self.current_level.fence_x
@@ -65,7 +60,7 @@ class GameLoop:
         self.fence_height = self.current_level.fence_height
         self.fence_width = self.current_level.fence_width
         print(
-            f"DEBUG: Fence initialized at ({self.fence_x}, {self.fence_y}) with dimensions {self.fence_width}x{self.fence_height}."
+            f"DEBUG: Fence initialized at ({self.fence_x:.2f}, {self.fence_y:.2f}) with dimensions {self.fence_width}x{self.fence_height}."
         )
 
         self.player_projectile_img = player_projectile_img
@@ -80,9 +75,10 @@ class GameLoop:
 
         self.round_number = 1
         print(f"DEBUG: Initial round number: {self.round_number}.")
-        generate_wind(self.round_number)
+        self.wind = wind
+        self.wind.generate(self.round_number)
         print(
-            f"DEBUG: Initial wind generated: Strength={wind_strength:.2f}, Direction={wind_direction}."
+            f"DEBUG: Initial wind generated: Strength={self.wind.strength:.2f}, Direction={self.wind.direction}."
         )
 
         self.player_turn = True
@@ -108,6 +104,7 @@ class GameLoop:
         self.enemy_charge_duration = 1500
         print("DEBUG: Enemy projectile charging state initialized.")
 
+        # MODIFIED: Inisialisasi self.time_remaining berdasarkan current_level.time_limit
         self.level_start_time = pygame.time.get_ticks()
         self.time_remaining = self.current_level.time_limit
         print(
@@ -135,9 +132,8 @@ class GameLoop:
     def _handle_input(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print("DEBUG: QUIT event detected. Exiting game loop.")
-                self.running = False
-                return False
+                print("DEBUG: QUIT event detected. Return Menu.")
+                return "quit_to_menu"
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if self.player_turn:
@@ -184,9 +180,9 @@ class GameLoop:
                                     self.selected_powerup = None
                                     self.e_charge_start = pygame.time.get_ticks()
                                     self.e_charging = True
-                                    generate_wind(self.round_number)
-                                hit_sound.play()
-                                break
+                                    self.wind.generate(self.round_number)
+                                    hit_sound.play()
+                                    break
 
                     if self.shoot_area.collidepoint(event.pos):
                         if not self.player_projectile.active and not self.p_is_charging:
@@ -197,13 +193,14 @@ class GameLoop:
             elif event.type == pygame.MOUSEBUTTONUP:
                 if self.player_turn and self.p_is_charging:
                     hold_time = pygame.time.get_ticks() - self.p_shoot_start_time
+                    self.power = min(150, hold_time // 10)
                     charge_percentage = min(1.0, hold_time / MAX_PLAYER_CHARGE_TIME)
                     base_speed = (
                         MIN_PLAYER_BASE_SPEED
                         + (MAX_PROJECTILE_SPEED - MIN_PLAYER_BASE_SPEED)
                         * charge_percentage
                     )
-                    speed = apply_wind_effect(base_speed, 1)
+                    speed = self.wind.apply_effect(base_speed, 1)
 
                     proj_image_for_player = player_projectile_img
                     proj_radius_for_player = player_projectile_img.get_width() // 2
@@ -247,7 +244,6 @@ class GameLoop:
 
     def _update_game_state(self):
         """Memperbarui logika game (pergerakan proyektil, tabrakan, giliran)."""
-
         self.player.update_image_by_state(
             pygame.time.get_ticks(), HIT_DURATION, MISS_DURATION
         )
@@ -345,7 +341,7 @@ class GameLoop:
                     print(
                         f"DEBUG: Round increased (Player's turn resolved, Enemy skipped). New round: {self.round_number}. Turn: Player"
                     )
-                    generate_wind(self.round_number)
+                    self.wind.generate(self.round_number)
                 else:
                     self.e_charge_start = pygame.time.get_ticks()
                     self.e_charging = True
@@ -363,11 +359,12 @@ class GameLoop:
                 self.enemy_knockback = False
                 self.player_turn = True
                 self.powerup_used_this_round = False
+                self.selected_powerup = None
                 self.round_number += 1
                 print(
                     f"DEBUG: Round increased (Enemy knockback resolved). New round: {self.round_number}. Turn: Player"
                 )
-                generate_wind(self.round_number)
+                self.wind.generate(self.round_number)
                 self.e_charging = False
                 self.enemy.state = "idle"
 
@@ -380,13 +377,13 @@ class GameLoop:
                         * random_charge_percentage
                     )
 
-                    angle = 3 * math.pi / 4  # Default angle for enemy
+                    angle = 3 * math.pi / 4
                     if self.current_level.enemy_accuracy_boost > 0:
                         angle_offset = random.uniform(-0.1, 0.1) * (
                             1 - self.current_level.enemy_accuracy_boost
                         )
                         angle += angle_offset
-                    speed = apply_wind_effect(base_speed, -1)
+                    speed = self.wind.apply_effect(base_speed, -1)
 
                     self.enemy_projectile.deactivate()
                     self.enemy_projectile.x = self.enemy.x
@@ -408,7 +405,7 @@ class GameLoop:
             if self.enemy_projectile.active:
                 self.enemy_projectile.update()
                 print(
-                    f"DEBUG: Enemy Projectile moving. Position: ({self.enemy_projectile.x:.2f}, {self.enemy_projectile.y:.2f}), Velocity: ({self.enemy_projectile.vel_x:.2f}, {self.enemy_projectile.vel_y:.2f})"
+                    f"DEBUG: Enemy Projectile moving. Position: ({self.enemy_projectile.x:.2f}, {self.enemy_projectile.y:.2f}), Kecepatan: ({self.enemy_projectile.vel_x:.2f}, {self.enemy_projectile.vel_y:.2f})"
                 )
 
                 enemy_projectile_resolved_this_frame = False
@@ -424,7 +421,7 @@ class GameLoop:
                         f"DEBUG: Enemy projectile hit fence at ({self.enemy_projectile.x:.2f}, {self.enemy_projectile.y:.2f})."
                     )
                     miss_sound_enemy.play()
-                    self.enemy.state = "edge"
+                    self.player.state = "edge"
                     enemy_projectile_resolved_this_frame = True
                 elif check_collision(
                     self.enemy_projectile.x,
@@ -433,7 +430,7 @@ class GameLoop:
                     self.player.y,
                     self.player.radius + self.enemy_projectile.radius,
                 ):
-                    damage_taken = self.current_level.enemy_power_boost
+                    damage_taken = BASE_DAMAGE + self.current_level.enemy_power_boost
                     self.player.health -= damage_taken
                     hit_sound.play()
                     self.player.state = "hit"
@@ -462,14 +459,13 @@ class GameLoop:
                     print(
                         f"DEBUG: Round increased (Enemy's turn resolved). New round: {self.round_number}. Turn: Player"
                     )
-                    generate_wind(self.round_number)
+                    self.wind.generate(self.round_number)
 
-        global wind_round_start, wind_duration
-        if self.round_number - wind_round_start >= wind_duration:
+        if self.round_number - self.wind.round_start >= self.wind.duration:
             print(
-                f"DEBUG: Wind duration ended. Generating new wind for round {wind_duration}."
+                f"DEBUG: Wind duration ended. Generating new wind for round {self.round_number}."
             )
-            generate_wind(self.round_number)
+            self.wind.generate(self.round_number)
 
         if self.current_level.time_limit is not None:
             elapsed_time = (pygame.time.get_ticks() - self.level_start_time) / 1000
@@ -519,7 +515,11 @@ class GameLoop:
         debug_text_turn = f"Turn: {'Player' if self.player_turn else 'Enemy'}"
         draw_text(self.screen, debug_text_turn, WIDTH - 100, HEIGHT - 30, 20, BLUE)
 
-        if self.current_level.time_limit is not None:
+        # MODIFIED: Hanya menggambar waktu jika time_remaining bukan None
+        if (
+            self.current_level.time_limit is not None
+            and self.time_remaining is not None
+        ):  # Tambahkan pemeriksaan time_remaining is not None
             draw_text(
                 self.screen,
                 f"TIME: {int(self.time_remaining)}",
@@ -529,12 +529,12 @@ class GameLoop:
                 RED,
             )
 
-        draw_wind_bar(self.screen, WIDTH // 2, 50, wind_strength, wind_direction)
+        self.wind.draw_bar(self.screen, WIDTH // 2, 50)
         print(
-            f"DEBUG: Kekuatan: {wind_strength:.2f}, Arah: {'Kanan' if wind_direction == 1 else 'Kiri'}, Durasi: {wind_duration} putaran."
+            f"DEBUG: Kekuatan: {self.wind.strength:.2f}, Arah: {'Kanan' if self.wind.direction == 1 else 'Kiri'}, Durasi: {self.wind.duration} putaran."
         )
         print(
-            f"DEBUG Wind draw: Durasi Angin: {wind_duration}, Arah Angin: {wind_direction}"
+            f"DEBUG Wind draw: Durasi Angin: {self.wind.duration}, Arah Angin: {self.wind.direction}"
         )
         draw_text(self.screen, "WIND", WIDTH // 2, 30, 25)
 
@@ -615,26 +615,73 @@ class GameLoop:
         pygame.display.update()
 
     def run(self):
-        while self.running:
-            if not self._handle_input():
+        game_outcome = None
+        running_game_loop = True
+
+        while running_game_loop:
+            input_result = self._handle_input()
+            if input_result == "quit_to_menu":
+                game_outcome = "quit_to_menu"
+                running_game_loop = False
                 break
-            game_continue = self._update_game_state()
-            if not game_continue:
-                self.running = False
-                break
+
+            update_result = self._update_game_state()
+            if update_result is False:
+                if self.game_over:
+                    game_outcome = "quit_to_menu"
+                    running_game_loop = False
+                elif self.game_won:
+                    self.current_level.display_level_win_message(self.screen)
+
+                    self.current_level_number += 1
+                    if self.current_level_number <= 3:
+                        print(f"DEBUG: Advancing to Level {self.current_level_number}.")
+                        next_level_powerup_limits_dict = LEVEL[
+                            self.current_level_number
+                        ]["powerup_limits"]
+
+                        self.current_level = Level(
+                            self.current_level_number, next_level_powerup_limits_dict
+                        )
+                        # MODIFIED: Pastikan time_remaining diperbarui untuk level baru
+                        self.time_remaining = self.current_level.time_limit
+
+                        self.player.health = self.player._max_health
+                        self.enemy.health = self.enemy._max_health
+                        self.round_number = 1
+                        print(
+                            f"DEBUG: Round reset for new level. New round: {self.round_number}"
+                        )
+                        self.player_projectile.deactivate()
+                        self.enemy_projectile.deactivate()
+                        self.player_turn = True
+                        self.selected_powerup = None
+                        self.powerup_used_this_round = False
+                        self.powerup_uses_counts = {i: 0 for i in range(len(POWERUPS))}
+                        self.level_start_time = pygame.time.get_ticks()
+                        self.player.x = self.current_level.player_x
+                        self.player.y = self.current_level.player_y
+                        self.enemy.x = self.current_level.enemy_x
+                        self.enemy.y = self.current_level.enemy_y
+                        self.fence_x = self.current_level.fence_x
+                        self.fence_y = self.current_level.fence_y
+                        self.fence_height = self.current_level.fence_height
+                        self.fence_width = self.current_level.fence_width
+                        self.powerup_boxes = self._create_powerup_boxes()
+                        self.game_won = False
+                    else:
+                        self.current_level.display_all_levels_completed_message(
+                            self.screen
+                        )
+                        game_outcome = "quit_to_menu"
+                        running_game_loop = False
+                if not running_game_loop:
+                    break
 
             self._draw_elements()
             self.clock.tick(60)
 
-        if self.game_over:
-            print("DEBUG: Game ended: Player lost.")
-            return False
-        elif self.game_won:
-            print("DEBUG: Game ended: Player won all levels.")
-            return True
-        else:
-            print("DEBUG: Game ended: User quit.")
-            return False
+        return game_outcome
 
 
 def run_game_loop(

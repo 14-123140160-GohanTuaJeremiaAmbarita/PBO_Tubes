@@ -1,13 +1,13 @@
 import pygame
-from settings import LEVEL, WIDTH, HEIGHT, POWERUPS
-from Game.game import load_and_scale_image
+from settings import *
+from Game.game import draw_text, load_and_scale_image
 
 
 class Level:
-    def __init__(self, level_number):
+    def __init__(self, level_number, initial_powerup_limits_dict):
         self.level_number = level_number
         self.background_img = self._load_background()
-        self.powerup_limits_per_type = self._get_powerup_limits_per_type()
+        self.powerup_limits_per_type = initial_powerup_limits_dict
         self.enemy_accuracy_boost = self._get_enemy_accuracy_boost()
         self.enemy_power_boost = self._get_enemy_power_boost()
         self.time_limit = self._get_time_limit()
@@ -16,9 +16,6 @@ class Level:
         self.fence_y = self._get_fence_y()
         self.fence_height = self._get_fence_height()
         self.fence_width = self._get_fence_width()
-        self.fence_img = (
-            self._load_fence_image()
-        )  # Memastikan atribut ini diinisialisasi
 
         self.player_x = self._get_player_x()
         self.player_y = self._get_player_y()
@@ -37,41 +34,10 @@ class Level:
                 img = pygame.image.load("aset/default.png")
             return pygame.transform.scale(img, (WIDTH, HEIGHT))
         except pygame.error as e:
-            print(
-                f"ERROR: Gagal memuat latar belakang untuk level {self.level_number}: {e}"
-            )
+            print(f"Error loading background for level {self.level_number}: {e}")
             default_surface = pygame.Surface((WIDTH, HEIGHT))
             default_surface.fill((100, 100, 100))
             return default_surface
-
-    def _load_fence_image(self):
-        try:
-            fence_path = "aset/map/fence.png"
-            scaled_img = load_and_scale_image(
-                fence_path, (self.fence_width, self.fence_height)
-            )
-            # print(f"DEBUG: _load_fence_image mengembalikan gambar dengan ukuran: {scaled_img.get_size() if scaled_img else 'None'}")
-            return scaled_img
-        except pygame.error as e:
-            print(
-                f"ERROR: Gagal memuat gambar pagar untuk level {self.level_number}: {e}"
-            )
-            default_surface = pygame.Surface(
-                (self.fence_width, self.fence_height), pygame.SRCALPHA
-            )
-            default_surface.fill((150, 150, 150, 128))
-            return default_surface
-
-    def _get_powerup_limits_per_type(self):
-        limits_from_settings_by_index = LEVEL.get(self.level_number, {}).get(
-            "powerup_limits", {}
-        )
-        mapped_limits = {}
-        for index, limit in limits_from_settings_by_index.items():
-            if 0 <= index < len(POWERUPS):
-                powerup_name = POWERUPS[index]["name"]
-                mapped_limits[powerup_name] = limit
-        return mapped_limits
 
     def _get_enemy_accuracy_boost(self):
         return LEVEL.get(self.level_number, {}).get("enemy_accuracy_boost", 0)
@@ -105,3 +71,17 @@ class Level:
 
     def _get_enemy_y(self):
         return LEVEL.get(self.level_number, {}).get("enemy_y", 575)
+
+    def display_level_win_message(self, screen):
+        message = f"Level {self.level_number} Selesai!"
+        draw_text(screen, message, WIDTH // 2, HEIGHT // 2 - 50, 50, GREEN)
+        pygame.display.update()
+        pygame.time.wait(2000)
+        print(f"DEBUG: Pesan kemenangan level {self.level_number} ditampilkan.")
+
+    def display_all_levels_completed_message(self, screen):
+        message = "Selamat! Anda Menyelesaikan Semua Level!"
+        draw_text(screen, message, WIDTH // 2, HEIGHT // 2 - 50, 40, BLUE)
+        pygame.display.update()
+        pygame.time.wait(3000)
+        print("DEBUG: Pesan semua level selesai ditampilkan.")

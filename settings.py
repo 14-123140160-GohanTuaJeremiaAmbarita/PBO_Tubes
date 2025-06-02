@@ -16,12 +16,12 @@ PLAYER_RADIUS = 30
 PLAYER_MAX_HEALTH = 100
 ENEMY_RADIUS = 30
 ENEMY_MAX_HEALTH = 100
-BASE_DAMAGE = 25
+BASE_DAMAGE = 100
 
 MIN_PLAYER_BASE_SPEED = 10
 MAX_PLAYER_CHARGE_TIME = 2000
 MIN_ENEMY_BASE_SPEED = 10
-MAX_PROJECTILE_SPEED = 25
+MAX_PROJECTILE_SPEED = 30
 FENCE_WIDTH = 150
 FENCE_HEIGHT = 400
 FENCE_X = 550
@@ -33,14 +33,6 @@ INITIAL_WIND_STRENGTH = 0.0
 INITIAL_WIND_DIRECTION = 1
 INITIAL_WIND_DURATION = 1
 INITIAL_WIND_ROUND_START = 0
-
-PLAYER_PROJECTILE_RADIUS = 30
-PLAYER_PROJECTILE_SPEED_BASE = 20
-PLAYER_PROJECTILE_MAX_SPEED = 40
-
-ENEMY_PROJECTILE_RADIUS = 30
-ENEMY_PROJECTILE_SPEED_MIN = 10
-ENEMY_PROJECTILE_SPEED_MAX = 25
 
 clock = None
 
@@ -106,12 +98,12 @@ LEVEL = {
         "enemy_accuracy_boost": 0,
         "enemy_power_boost": 5,
         "time_limit": None,
-        "player_x": 150,
+        "player_x": WIDTH // 6,
         "player_y": 575,
-        "enemy_x": WIDTH - 100,
-        "enemy_y": 574,
-        "fence_height": FENCE_HEIGHT // 2 - 50,
-        "fence_width": FENCE_WIDTH - 100,
+        "enemy_x": 1100,
+        "enemy_y": 575,
+        "fence_height": FENCE_HEIGHT,
+        "fence_width": FENCE_WIDTH,
         "fence_x": FENCE_X,
         "fence_y": FENCE_Y,
     },
@@ -125,12 +117,12 @@ LEVEL = {
         "enemy_accuracy_boost": 0.15,
         "enemy_power_boost": 10,
         "time_limit": None,
-        "player_x": WIDTH // 6,
+        "player_x": 150,
         "player_y": 525,
-        "enemy_x": 1100,
+        "enemy_x": WIDTH - 100,
         "enemy_y": 525,
-        "fence_height": FENCE_HEIGHT,
-        "fence_width": FENCE_WIDTH,
+        "fence_height": FENCE_HEIGHT // 2 - 50,
+        "fence_width": FENCE_WIDTH - 100,
         "fence_x": FENCE_X,
         "fence_y": FENCE_Y,
     },
@@ -150,7 +142,7 @@ LEVEL = {
         "enemy_y": 575,
         "fence_height": FENCE_HEIGHT,
         "fence_width": FENCE_WIDTH,
-        "fence_x": FENCE_X - 50,
+        "fence_x": FENCE_X,
         "fence_y": FENCE_Y,
     },
 }

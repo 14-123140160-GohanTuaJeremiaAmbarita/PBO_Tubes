@@ -1,6 +1,6 @@
 import pygame
 from Game.game import *
-from Game.game_loop import GameLoop
+from Game.game_loop import *
 from menu import main_menu
 
 pygame.init()
@@ -23,23 +23,20 @@ while running_app:
     chosen_level = main_menu(screen)
 
     if chosen_level is not None:
-        #
         game_instance = GameLoop(
             screen, chosen_level, player_projectile_img, enemy_projectile_img
         )
-
         game_result = game_instance.run()
 
-        if game_result:
-            print("Game berakhir. Kembali ke menu utama atau keluar.")
+        if game_result == "quit_to_menu":
+            pass
+        elif game_result == "game_over_lose":
             running_app = False
-        else:  #
-            print("Pemain keluar dari game.")
+        elif game_result == "all_levels_completed":
             running_app = False
-
+        else:
+            running_app = False
     else:
-
-        print("Pemain keluar dari menu.")
         running_app = False
 
 pygame.quit()
